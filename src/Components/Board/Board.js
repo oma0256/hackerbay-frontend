@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import Mushroom from '../../images/mushroom.png';
 import './Board.css';
+import Cell from '../Cell/Cell';
 
 class Board extends Component {
   state = {
@@ -10,12 +10,28 @@ class Board extends Component {
     board: [],
   };
 
+  shuffleArray = array => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const newPosition = Math.floor(Math.random() * (i + 1));
+      if (array[i] === 2 || array[newPosition] === 2) {
+        continue;
+      }
+      const temp = array[i];
+      array[i] = array[newPosition];
+      array[newPosition] = temp;
+    }
+    return array;
+  };
+
   generateBoardPositions = () => {
     const { row, column, isRowLessOrEqual } = this.state;
     const rowOrColumn = isRowLessOrEqual ? row : column;
     const spritePositions = Array(rowOrColumn).fill(1);
     const emptyPositions = Array(row * column - rowOrColumn);
-    const boardPositions = spritePositions.concat(emptyPositions);
+    let boardPositions = spritePositions.concat(emptyPositions);
+    const marioPositon = Math.ceil(boardPositions.length / 2) - 1;
+    boardPositions[marioPositon] = 2;
+    boardPositions = this.shuffleArray(boardPositions);
     const board = [];
     while (boardPositions.length) {
       const boardRows = boardPositions.splice(0, column);
@@ -42,11 +58,7 @@ class Board extends Component {
       boardCells = [];
       for (let cell = 0; cell < board[row].length; cell++) {
         boardCells.push(
-          <td className='cell' key={index}>
-            {board[row][cell] === 1 ? (
-              <img src={Mushroom} alt='sprite' />
-            ) : null}
-          </td>
+          <Cell index={index} isSpriteOrMario={board[row][cell]} />
         );
         index = index + 1;
       }
