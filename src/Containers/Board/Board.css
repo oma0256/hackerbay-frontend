@@ -1,7 +1,12 @@
 .table {
-  margin: 100px auto;
+  margin: auto;
+  margin-top: 50px;
 }
 
 .table:focus {
   outline: none;
+}
+
+.footer {
+  text-align: center;
 }

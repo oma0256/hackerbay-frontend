@@ -22,6 +22,20 @@ class Board extends Component {
     });
   }
 
+  isGameOver = () => {
+    const { board, totalMoves } = this.state;
+    let gameOver = true;
+    for (let row = 0; row < board.length; row++) {
+      if (board[row].includes(1)) {
+        gameOver = false;
+        break;
+      }
+    }
+    if (gameOver) {
+      alert(`Game over. Total moves to save princess: ${totalMoves}`);
+    }
+  };
+
   horizontalMarioMove = isLeftMove => {
     let totalMoves = this.state.totalMoves;
     const newBoard = this.state.board.map(row => {
@@ -36,7 +50,7 @@ class Board extends Component {
       }
       return newRow;
     });
-    this.setState({ board: newBoard, totalMoves });
+    this.setState({ board: newBoard, totalMoves }, () => this.isGameOver());
   };
 
   verticalMarioMove = isUpMove => {
@@ -59,7 +73,7 @@ class Board extends Component {
       const newMarioRow = isUpMove ? marioRow - 1 : marioRow;
       newBoard[newMarioRow][marioColumn] = 2;
     }
-    this.setState({ board: newBoard, totalMoves });
+    this.setState({ board: newBoard, totalMoves }, () => this.isGameOver());
   };
 
   shuffleArray = array => {
@@ -74,37 +88,46 @@ class Board extends Component {
     return array;
   };
 
+  createBoard = boardPositions => {
+    const board = [];
+    while (boardPositions.length) {
+      const boardRows = boardPositions.splice(0, this.state.column);
+      board.push(boardRows);
+    }
+    return board;
+  };
+
   generateBoardPositions = () => {
     const { row, column, isRowLessOrEqual } = this.state;
     const rowOrColumn = isRowLessOrEqual ? row : column;
     const spritePositions = Array(rowOrColumn).fill(1);
     const emptyPositions = Array(row * column - rowOrColumn);
     let boardPositions = spritePositions.concat(emptyPositions);
-    let board = [];
-    while (boardPositions.length) {
-      const boardRows = boardPositions.splice(0, column);
-      board.push(boardRows);
-    }
+    let board = this.createBoard(boardPositions);
     board[Math.floor(row / 2)][Math.floor(column / 2)] = 2;
-    let unShuffledBoard = [];
+    boardPositions = [];
     for (let row = 0; row < board.length; row++) {
-      unShuffledBoard = unShuffledBoard.concat(board[row]);
+      boardPositions = boardPositions.concat(board[row]);
     }
-    const shuffledBoard = this.shuffleArray(unShuffledBoard);
-    const newBoard = [];
-    while (shuffledBoard.length) {
-      const boardRowss = shuffledBoard.splice(0, column);
-      newBoard.push(boardRowss);
+    boardPositions = this.shuffleArray(boardPositions);
+    board = this.createBoard(boardPositions);
+    this.setState({ board }, () => this.boardRef.current.focus());
+  };
+
+  getRowOrColumn = input => {
+    if (Math.round(+input) <= 0 || Math.round(+input) > 10 || isNaN(+input)) {
+      return 10;
     }
-    this.setState({ board: newBoard }, () => this.boardRef.current.focus());
+    return +input;
   };
 
   componentDidMount() {
-    const row = prompt('Please enter the board height: ');
-    const column = prompt('Please enter the board width: ');
-    this.setState(
-      { row: +row, column: +column, isRowLessOrEqual: +row <= +column },
-      () => this.generateBoardPositions()
+    let row = prompt('Please enter the board height: ');
+    let column = prompt('Please enter the board width: ');
+    row = this.getRowOrColumn(row);
+    column = this.getRowOrColumn(column);
+    this.setState({ row, column, isRowLessOrEqual: row <= column }, () =>
+      this.generateBoardPositions()
     );
   }
 
@@ -126,14 +149,20 @@ class Board extends Component {
     boardRows = boardRows.map(boardRow => boardRow);
 
     return (
-      <table
-        className='table'
-        {...ArrowKeysReact.events}
-        tabIndex='1'
-        ref={this.boardRef}
-      >
-        <tbody>{boardRows}</tbody>
-      </table>
+      <div>
+        <table
+          className='table'
+          {...ArrowKeysReact.events}
+          tabIndex='1'
+          ref={this.boardRef}
+        >
+          <tbody>{boardRows}</tbody>
+        </table>
+        <div className='footer'>
+          <p>If Mario is not moving please click anywhere on the board.</p>
+          <p>Use the arrow keys on the keyboard to move Mario.</p>
+        </div>
+      </div>
     );
   }
 }
