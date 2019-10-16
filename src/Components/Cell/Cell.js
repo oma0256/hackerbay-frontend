@@ -4,10 +4,10 @@ import Mario from '../../images/mario.png';
 import './Cell.css';
 
 const Cell = props => {
-  const { isSpriteOrMario, index } = props;
+  const { isSpriteOrMario } = props;
 
   return (
-    <td className='cell' key={index}>
+    <td className='cell'>
       {isSpriteOrMario === 1 ? <img src={Mushroom} alt='sprite' /> : null}
       {isSpriteOrMario === 2 ? <img src={Mario} alt='mario' /> : null}
     </td>

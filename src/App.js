@@ -1,5 +1,5 @@
 import React from 'react';
-import Board from './Components/Board/Board';
+import Board from './Containers/Board/Board';
 
 function App() {
   return (

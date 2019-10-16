@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import ArrowKeysReact from 'arrow-keys-react';
 import './Board.css';
-import Cell from '../Cell/Cell';
+import Cell from '../../Components/Cell/Cell';
 
 class Board extends Component {
   constructor(props) {
@@ -27,14 +27,11 @@ class Board extends Component {
     const newBoard = this.state.board.map(row => {
       const newRow = [...row];
       const marioIndex = newRow.findIndex(element => element === 2);
-      const acceptedMarioPosition = isLeftMove
-        ? marioIndex !== 0
-        : marioIndex !== this.state.column - 1;
-      if (marioIndex !== -1 && acceptedMarioPosition) {
+      const possibleMarioPosition = isLeftMove ? 0 : this.state.column - 1;
+      if (marioIndex !== -1 && marioIndex !== possibleMarioPosition) {
         newRow[marioIndex] = 0;
-        isLeftMove
-          ? (newRow[marioIndex - 1] = 2)
-          : (newRow[marioIndex + 1] = 2);
+        const newMarioIndex = isLeftMove ? marioIndex - 1 : marioIndex + 1;
+        newRow[newMarioIndex] = 2;
         totalMoves += 1;
       }
       return newRow;
@@ -49,10 +46,8 @@ class Board extends Component {
     const newBoard = this.state.board.map((row, index) => {
       const newRow = [...row];
       const marionIndex = newRow.findIndex(element => element === 2);
-      const acceptedMarioPosition = isUpMove
-        ? index !== 0
-        : index !== this.state.row - 1;
-      if (marionIndex !== -1 && acceptedMarioPosition) {
+      const possibleMarioPosition = isUpMove ? 0 : this.state.row - 1;
+      if (marionIndex !== -1 && index !== possibleMarioPosition) {
         marioRow = isUpMove ? index : index + 1;
         marioColumn = marionIndex;
         newRow[marionIndex] = 0;
@@ -61,7 +56,8 @@ class Board extends Component {
       return newRow;
     });
     if (marioRow !== undefined && marioColumn !== undefined) {
-      newBoard[isUpMove ? marioRow - 1 : marioRow][marioColumn] = 2;
+      const newMarioRow = isUpMove ? marioRow - 1 : marioRow;
+      newBoard[newMarioRow][marioColumn] = 2;
     }
     this.setState({ board: newBoard, totalMoves });
   };
@@ -69,12 +65,11 @@ class Board extends Component {
   shuffleArray = array => {
     for (let i = array.length - 1; i > 0; i--) {
       const newPosition = Math.floor(Math.random() * (i + 1));
-      if (array[i] === 2 || array[newPosition] === 2) {
-        continue;
+      if (array[i] !== 2 && array[newPosition] !== 2) {
+        const temp = array[i];
+        array[i] = array[newPosition];
+        array[newPosition] = temp;
       }
-      const temp = array[i];
-      array[i] = array[newPosition];
-      array[newPosition] = temp;
     }
     return array;
   };
@@ -85,15 +80,23 @@ class Board extends Component {
     const spritePositions = Array(rowOrColumn).fill(1);
     const emptyPositions = Array(row * column - rowOrColumn);
     let boardPositions = spritePositions.concat(emptyPositions);
-    const marioPositon = Math.ceil(boardPositions.length / 2) - 1;
-    boardPositions[marioPositon] = 2;
-    boardPositions = this.shuffleArray(boardPositions);
-    const board = [];
+    let board = [];
     while (boardPositions.length) {
       const boardRows = boardPositions.splice(0, column);
       board.push(boardRows);
     }
-    this.setState({ board }, () => this.boardRef.current.focus());
+    board[Math.floor(row / 2)][Math.floor(column / 2)] = 2;
+    let unShuffledBoard = [];
+    for (let row = 0; row < board.length; row++) {
+      unShuffledBoard = unShuffledBoard.concat(board[row]);
+    }
+    const shuffledBoard = this.shuffleArray(unShuffledBoard);
+    const newBoard = [];
+    while (shuffledBoard.length) {
+      const boardRowss = shuffledBoard.splice(0, column);
+      newBoard.push(boardRowss);
+    }
+    this.setState({ board: newBoard }, () => this.boardRef.current.focus());
   };
 
   componentDidMount() {
@@ -114,7 +117,7 @@ class Board extends Component {
       boardCells = [];
       for (let cell = 0; cell < board[row].length; cell++) {
         boardCells.push(
-          <Cell index={index} isSpriteOrMario={board[row][cell]} />
+          <Cell key={index} isSpriteOrMario={board[row][cell]} />
         );
         index = index + 1;
       }
