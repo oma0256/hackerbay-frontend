@@ -1,13 +1,69 @@
 import React, { Component } from 'react';
+import ArrowKeysReact from 'arrow-keys-react';
 import './Board.css';
 import Cell from '../Cell/Cell';
 
 class Board extends Component {
-  state = {
-    row: null,
-    column: null,
-    isRowLessOrEqual: false,
-    board: [],
+  constructor(props) {
+    super(props);
+    this.state = {
+      row: null,
+      column: null,
+      isRowLessOrEqual: null,
+      board: [],
+      totalMoves: 0,
+    };
+    this.boardRef = React.createRef();
+    ArrowKeysReact.config({
+      left: () => this.horizontalMarioMove(true),
+      right: () => this.horizontalMarioMove(false),
+      up: () => this.verticalMarioMove(true),
+      down: () => this.verticalMarioMove(false),
+    });
+  }
+
+  horizontalMarioMove = isLeftMove => {
+    let totalMoves = this.state.totalMoves;
+    const newBoard = this.state.board.map(row => {
+      const newRow = [...row];
+      const marioIndex = newRow.findIndex(element => element === 2);
+      const acceptedMarioPosition = isLeftMove
+        ? marioIndex !== 0
+        : marioIndex !== this.state.column - 1;
+      if (marioIndex !== -1 && acceptedMarioPosition) {
+        newRow[marioIndex] = 0;
+        isLeftMove
+          ? (newRow[marioIndex - 1] = 2)
+          : (newRow[marioIndex + 1] = 2);
+        totalMoves += 1;
+      }
+      return newRow;
+    });
+    this.setState({ board: newBoard, totalMoves });
+  };
+
+  verticalMarioMove = isUpMove => {
+    let marioRow;
+    let marioColumn;
+    let totalMoves = this.state.totalMoves;
+    const newBoard = this.state.board.map((row, index) => {
+      const newRow = [...row];
+      const marionIndex = newRow.findIndex(element => element === 2);
+      const acceptedMarioPosition = isUpMove
+        ? index !== 0
+        : index !== this.state.row - 1;
+      if (marionIndex !== -1 && acceptedMarioPosition) {
+        marioRow = isUpMove ? index : index + 1;
+        marioColumn = marionIndex;
+        newRow[marionIndex] = 0;
+        totalMoves += 1;
+      }
+      return newRow;
+    });
+    if (marioRow !== undefined && marioColumn !== undefined) {
+      newBoard[isUpMove ? marioRow - 1 : marioRow][marioColumn] = 2;
+    }
+    this.setState({ board: newBoard, totalMoves });
   };
 
   shuffleArray = array => {
@@ -37,7 +93,7 @@ class Board extends Component {
       const boardRows = boardPositions.splice(0, column);
       board.push(boardRows);
     }
-    this.setState({ board });
+    this.setState({ board }, () => this.boardRef.current.focus());
   };
 
   componentDidMount() {
@@ -67,7 +123,12 @@ class Board extends Component {
     boardRows = boardRows.map(boardRow => boardRow);
 
     return (
-      <table className='table'>
+      <table
+        className='table'
+        {...ArrowKeysReact.events}
+        tabIndex='1'
+        ref={this.boardRef}
+      >
         <tbody>{boardRows}</tbody>
       </table>
     );
