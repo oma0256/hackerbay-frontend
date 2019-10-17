@@ -138,9 +138,9 @@ class Board extends Component {
     let index = 0;
     for (let row = 0; row < board.length; row++) {
       boardCells = [];
-      for (let cell = 0; cell < board[row].length; cell++) {
+      for (let column = 0; column < board[row].length; column++) {
         boardCells.push(
-          <Cell key={index} isSpriteOrMario={board[row][cell]} />
+          <Cell key={index} isSpriteOrMario={board[row][column]} />
         );
         index = index + 1;
       }
